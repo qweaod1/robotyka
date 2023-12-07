@@ -1,0 +1,130 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <algorithm>
+#include <cmath>
+
+using namespace std;
+
+struct Node {
+    int x, y;
+    int cost;
+    int heuristic;
+
+    bool operator>(const Node& other) const {
+        return cost + heuristic > other.cost + other.heuristic;
+    }
+};
+
+int calculateHeuristic(int x, int y, int goalX, int goalY) {
+    return sqrt((x - goalX) * (x - goalX) + (y - goalY) * (y - goalY));
+}
+
+vector<pair<int, int>> aStar(const vector<vector<int>>& grid, int startX, int startY, int goalX, int goalY) {
+    int rows = grid.size();
+    int cols = grid[0].size();
+
+    vector<vector<bool>> visited(rows, vector<bool>(cols, false));
+    priority_queue<Node, vector<Node>, greater<Node>> pq;
+    vector<vector<pair<int, int>>> parent(rows, vector<pair<int, int>>(cols, {-1, -1}));
+
+    pq.push({startX, startY, grid[startX][startY], calculateHeuristic(startX, startY, goalX, goalY)});
+
+    while (!pq.empty()) {
+        Node current = pq.top();
+        pq.pop();
+
+        if (current.x == goalX && current.y == goalY) {
+            vector<pair<int, int>> path;
+            while (current.x != -1 && current.y != -1) {
+                path.push_back({current.x, current.y});
+                current = {parent[current.x][current.y].first, parent[current.x][current.y].second};
+            }
+            reverse(path.begin(), path.end());
+            return path;
+        }
+
+        visited[current.x][current.y] = true;
+
+        int dx[] = {0, 0, -1, 1};
+        int dy[] = {-1, 1, 0, 0};
+
+        // Hierarchiczne rozwiązywanie konfliktów
+        vector<Node> neighbors;
+        for (int i = 0; i < 4; ++i) {
+            int newX = current.x + dx[i];
+            int newY = current.y + dy[i];
+
+            if (newX >= 0 && newX < rows && newY >= 0 && newY < cols && !visited[newX][newY] && grid[newX][newY] != 5) {
+                int newCost = current.cost + grid[newX][newY];
+
+                if (newCost < grid[newX][newY] || parent[newX][newY].first == -1) {
+                    parent[newX][newY] = {current.x, current.y};
+                    neighbors.push_back({newX, newY, newCost, calculateHeuristic(newX, newY, goalX, goalY)});
+                }
+            }
+        }
+
+        // Sortowanie sąsiadów według hierarchii
+        sort(neighbors.begin(), neighbors.end(), [](const Node& a, const Node& b) {
+            return a.cost > b.cost;
+        });
+
+        for (const Node& neighbor : neighbors) {
+            pq.push(neighbor);
+        }
+    }
+
+    return {};
+}
+
+int main() {
+    // Przykładowa mapa
+    vector<vector<int>> grid = {
+        {0, 0, 0, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {5, 0, 0, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0}
+    };
+
+    int startX = 0;
+    int startY = 0;
+    int goalX = 19;
+    int goalY = 19;
+
+    // Wywołanie algorytmu A*
+    vector<pair<int, int>> path = aStar(grid, startX, startY, goalX, goalY);
+
+    if (!path.empty()) {
+        // Oznacz trasę wartością 3
+        for (const auto& point : path) {
+            grid[point.first][point.second] = 3;
+        }
+
+        // Wyświetlenie wyniku
+        for (int i = 0; i < grid.size(); ++i) {
+            for (int j = 0; j < grid[0].size(); ++j) {
+                cout << grid[i][j] << " ";
+            }
+            cout << endl;
+        }
+    } else {
+        cout << "Nie udało się znaleźć ścieżki do celu.\n";
+    }
+
+    return 0;
+}
