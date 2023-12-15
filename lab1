@@ -102,6 +102,12 @@ int main() {
     int goalX = 19;
     int goalY = 19;
 
+    // Check if the starting point is blocked
+    if (grid[startX][startY] == 5) {
+        cout << "Starting point is blocked. Unable to find a path.\n";
+        return 1;
+    }
+
     vector<pair<int, int>> path = aStar(grid, startX, startY, goalX, goalY);
 
     if (!path.empty()) {
