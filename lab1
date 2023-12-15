@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <queue>
 #include <algorithm>
@@ -49,7 +50,6 @@ vector<pair<int, int>> aStar(const vector<vector<int>>& grid, int startX, int st
         int dx[] = {0, 0, -1, 1};
         int dy[] = {-1, 1, 0, 0};
 
-        // Hierarchiczne rozwiązywanie konfliktów
         vector<Node> neighbors;
         for (int i = 0; i < 4; ++i) {
             int newX = current.x + dx[i];
@@ -65,7 +65,6 @@ vector<pair<int, int>> aStar(const vector<vector<int>>& grid, int startX, int st
             }
         }
 
-        // Sortowanie sąsiadów według hierarchii
         sort(neighbors.begin(), neighbors.end(), [](const Node& a, const Node& b) {
             return a.cost > b.cost;
         });
@@ -79,43 +78,37 @@ vector<pair<int, int>> aStar(const vector<vector<int>>& grid, int startX, int st
 }
 
 int main() {
-    // Przykładowa mapa
-    vector<vector<int>> grid = {
-        {0, 0, 0, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {5, 0, 0, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0}
-    };
+    ifstream inputFile("map.txt");
+    if (!inputFile.is_open()) {
+        cout << "Unable to open the file.\n";
+        return 1;
+    }
+
+    vector<vector<int>> grid;
+    int value;
+    while (inputFile >> value) {
+        vector<int> row;
+        row.push_back(value);
+        for (int j = 1; j < 20; ++j) {
+            inputFile >> value;
+            row.push_back(value);
+        }
+        grid.push_back(row);
+    }
+    inputFile.close();
 
     int startX = 0;
     int startY = 0;
     int goalX = 19;
     int goalY = 19;
 
-    // Wywołanie algorytmu A*
     vector<pair<int, int>> path = aStar(grid, startX, startY, goalX, goalY);
 
     if (!path.empty()) {
-        // Oznacz trasę wartością 3
         for (const auto& point : path) {
             grid[point.first][point.second] = 3;
         }
 
-        // Wyświetlenie wyniku
         for (int i = 0; i < grid.size(); ++i) {
             for (int j = 0; j < grid[0].size(); ++j) {
                 cout << grid[i][j] << " ";
@@ -123,7 +116,7 @@ int main() {
             cout << endl;
         }
     } else {
-        cout << "Nie udało się znaleźć ścieżki do celu.\n";
+        cout << "Unable to find a path to the goal.\n";
     }
 
     return 0;
